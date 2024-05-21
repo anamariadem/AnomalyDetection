@@ -1,0 +1,4 @@
+server/plots/*
+.DS_Store
+.idea
+.venv
