@@ -5,7 +5,6 @@ class InputTuple:
         self.__out_time = -1
         self.__cpu_percentage = -1
         self.__memory_percentage = -1
-        self.__processed = False
 
     @property
     def id(self):
@@ -27,10 +26,6 @@ class InputTuple:
     def memory_percentage(self):
         return self.__memory_percentage
 
-    @property
-    def processed(self):
-        return self.__processed
-
     def set_arrival_time(self, time):
         self.__in_time = time
 
@@ -42,7 +37,3 @@ class InputTuple:
 
     def set_memory_percentage(self, percentage):
         self.__memory_percentage = percentage
-
-    def set_processed(self, value):
-        self.__processed = value
-

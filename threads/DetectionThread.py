@@ -1,11 +1,13 @@
 from threading import Thread, Event
 import asyncio
 import json
+from river import metrics
 
 from utils.plot import plot_detection_results
-from utils.save_to_csv import save_anomaly_score_to_csv
+from utils.save_to_csv import save_metrics_to_csv
 from utils.metrics import set_metrics
-from config.warmup import WARMUP_PERIOD
+from utils.print import print_anomaly_scores
+from config.config import WARMUP_PERIOD, THRESHOLD
 
 
 class DetectionThread(Thread):
@@ -17,13 +19,70 @@ class DetectionThread(Thread):
         self.__processed_tuples = []
         self._detector = None
         self._detectors = {}
+        self._auc_scores = {
+            'heart_rate': metrics.ROCAUC(),
+            'systolic_blood_pressure': metrics.ROCAUC(),
+            'diastolic_blood_pressure': metrics.ROCAUC(),
+            'temperature': metrics.ROCAUC(),
+            'respiratory_rate': metrics.ROCAUC(),
+            'oxygen_saturation': metrics.ROCAUC(),
+            'glucose': metrics.ROCAUC(),
+        }
+        self._precision_scores = {
+            'heart_rate': metrics.Precision(),
+            'systolic_blood_pressure': metrics.Precision(),
+            'diastolic_blood_pressure': metrics.Precision(),
+            'temperature': metrics.Precision(),
+            'respiratory_rate': metrics.Precision(),
+            'oxygen_saturation': metrics.Precision(),
+            'glucose': metrics.Precision(),
+        }
+        self._recall_scores = {
+            'heart_rate': metrics.Recall(),
+            'systolic_blood_pressure': metrics.Recall(),
+            'diastolic_blood_pressure': metrics.Recall(),
+            'temperature': metrics.Recall(),
+            'respiratory_rate': metrics.Recall(),
+            'oxygen_saturation': metrics.Recall(),
+            'glucose': metrics.Recall(),
+        }
         self._stop_event = Event()
 
     def learn_one(self, processing_tuple_dict):
         pass
 
-    def score_one(self, processing_tuple_dict):
+    def score_one(self, processing_tuple_dict) -> dict:
         pass
+
+    def compute_auc(self, processing_tuple, results):
+        for key, result in results.items():
+            if key in self._auc_scores:
+                self._auc_scores[key].update(y_true=processing_tuple.anomaly_labels[key], y_pred=result)
+
+        auc_scores_to_set = {}
+        for key in self._auc_scores.keys():
+            auc_scores_to_set[key] = self._auc_scores[key].get()
+
+        processing_tuple.set_auc_score_dict(auc_scores_to_set)
+
+    def compute_precision_and_recall(self, processing_tuple, results):
+        # todo we might add predicted_label = score > threshold
+        for key, result in results.items():
+            if key in self._precision_scores:
+                predicted_label = 1 if result > THRESHOLD else 0
+                self._precision_scores[key].update(y_true=processing_tuple.anomaly_labels[key], y_pred=predicted_label)
+                self._recall_scores[key].update(y_true=processing_tuple.anomaly_labels[key], y_pred=predicted_label)
+
+        precision_scores_to_set = {}
+        for key in self._precision_scores.keys():
+            precision_scores_to_set[key] = self._precision_scores[key].get()
+
+        recall_scores_to_set = {}
+        for key in self._recall_scores.keys():
+            recall_scores_to_set[key] = self._recall_scores[key].get()
+
+        processing_tuple.set_precision_score_dict(precision_scores_to_set)
+        processing_tuple.set_recall_score_dict(recall_scores_to_set)
 
     async def process_tuple(self, processing_tuple):
         processing_tuple_dict = processing_tuple.to_dict()
@@ -34,10 +93,10 @@ class DetectionThread(Thread):
             processing_tuple.set_anomaly_score_dict(results)
             set_metrics(processing_tuple)
 
-            print("{:<8} {:<15}".format('Key', 'Score'))
-            for key, result in processing_tuple.anomaly_scores.items():
-                print("{:<8} {:<15}".format(key, result))
-            print('\n')
+            self.compute_auc(processing_tuple, results)
+            self.compute_precision_and_recall(processing_tuple, results)
+
+            print_anomaly_scores(processing_tuple)
 
             if self.__websocket is not None:
                 data_to_send = json.dumps(dict(type='processed_tuples', data=processing_tuple.convert_to_json()))
@@ -53,7 +112,7 @@ class DetectionThread(Thread):
 
     def handle_thread_stop(self):
         plot_detection_results(self.__processed_tuples)
-        save_anomaly_score_to_csv(self.__processed_tuples)
+        save_metrics_to_csv(self.__processed_tuples)
 
     def stopped(self):
         return self._stop_event.is_set()

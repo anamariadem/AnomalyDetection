@@ -1,7 +1,7 @@
 from river import anomaly
 
 from threads.DetectionThread import DetectionThread
-from config.warmup import WARMUP_PERIOD
+from config.config import WARMUP_PERIOD
 
 
 class HalfSpaceTreesDetector(DetectionThread):
