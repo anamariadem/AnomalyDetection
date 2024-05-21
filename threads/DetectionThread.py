@@ -66,7 +66,6 @@ class DetectionThread(Thread):
         processing_tuple.set_auc_score_dict(auc_scores_to_set)
 
     def compute_precision_and_recall(self, processing_tuple, results):
-        # todo we might add predicted_label = score > threshold
         for key, result in results.items():
             if key in self._precision_scores:
                 predicted_label = 1 if result > THRESHOLD else 0
