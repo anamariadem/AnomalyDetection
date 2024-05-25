@@ -99,6 +99,8 @@ class PatientVitalsTuple(InputTuple):
 
     def __getitem__(self, item):
         dictionary = {
+            'id': self.id,
+            'timestamp': self.__timestamp,
             'heart_rate': self.__heart_rate,
             'systolic_blood_pressure': self.__systolic_blood_pressure,
             'diastolic_blood_pressure': self.__diastolic_blood_pressure,
@@ -111,6 +113,8 @@ class PatientVitalsTuple(InputTuple):
             'precision_scores': self.__precision_scores,
             'recall_scores': self.__recall_scores,
             'auc_scores': self.__auc_scores,
+            'cpu_percentage': self.cpu_percentage,
+            'memory_percentage': self.memory_percentage,
         }
 
         if item in dictionary:

@@ -24,7 +24,7 @@ class WindowQueue:
         self.sort(*args, **kwargs)
 
     def pop(self):
-        return self.__dequeue.pop()
+        return self.__dequeue.popleft()
 
     def get(self):
         return self.__dequeue

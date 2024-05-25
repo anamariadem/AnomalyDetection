@@ -7,8 +7,10 @@ from models.PatientVitalsTuple import PatientVitalsTuple
 class FileReader:
     def __init__(self, file_name, labels_file_name, queue):
         self.__file_name = file_name
+        print('file name:', file_name)
         self.__queue = queue
         self.__labels_file_name = labels_file_name
+        print('labels file name:', labels_file_name)
 
     def read_data(self, stopped):
         label_data = []
@@ -51,4 +53,4 @@ class FileReader:
                 self.__queue.push(vitals_tuple)
 
                 line += 1
-                time.sleep(0.1)
+                time.sleep(1)

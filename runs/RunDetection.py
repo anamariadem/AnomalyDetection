@@ -8,7 +8,7 @@ from threads.detectionAlgorithms.LocalOutlierFactorDetector import LocalOutlierF
 
 class RunDetection:
     def __init__(self, file_name, labels_file_name, websocket=None, approach='half_space_trees'):
-        self.__queue = WindowQueue(5)
+        self.__queue = WindowQueue(2000)
         self.__approach = approach
         file_reader = FileReader(file_name, labels_file_name, self.__queue)
         self.__producer_thread = DataProducerThread(file_reader)

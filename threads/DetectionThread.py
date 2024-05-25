@@ -15,6 +15,8 @@ class DetectionThread(Thread):
         super().__init__()
         self.__queue = queue
         self.__websocket = websocket
+        self._threshold = THRESHOLD
+        self._approach = None
 
         self.__processed_tuples = []
         self._detector = None
@@ -68,7 +70,7 @@ class DetectionThread(Thread):
     def compute_precision_and_recall(self, processing_tuple, results):
         for key, result in results.items():
             if key in self._precision_scores:
-                predicted_label = 1 if result > THRESHOLD else 0
+                predicted_label = 1 if result > self._threshold else 0
                 self._precision_scores[key].update(y_true=processing_tuple.anomaly_labels[key], y_pred=predicted_label)
                 self._recall_scores[key].update(y_true=processing_tuple.anomaly_labels[key], y_pred=predicted_label)
 
@@ -109,9 +111,18 @@ class DetectionThread(Thread):
         self.learn_one(processing_tuple_dict)
         self.__processed_tuples.append(processing_tuple)
 
-    def handle_thread_stop(self):
+    async def handle_thread_stop(self):
+        print('STOPPING THREAD')
+        if len(self.__queue) > 0:
+            print('PROCESSING REMAINING DATA:', len(self.__queue))
+            queue = self.__queue.to_list()
+            for processing_tuple in queue:
+                await self.process_tuple(processing_tuple)
+            print('FINISHED PROCESSING REMAINING DATA:', len(self.__queue))
+
+        print('Plotting results and saving data...')
         plot_detection_results(self.__processed_tuples)
-        save_metrics_to_csv(self.__processed_tuples)
+        save_metrics_to_csv(self.__processed_tuples, self._approach, WARMUP_PERIOD, self._threshold)
 
     def stopped(self):
         return self._stop_event.is_set()
@@ -122,7 +133,7 @@ class DetectionThread(Thread):
     async def process_data(self):
         while True:
             if self.stopped():
-                self.handle_thread_stop()
+                await self.handle_thread_stop()
                 break
 
             if len(self.__queue) > 0:

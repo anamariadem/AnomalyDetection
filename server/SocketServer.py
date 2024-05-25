@@ -18,7 +18,7 @@ class SocketServer:
             await asyncio.Future()  # Run forever
 
     def handle_start_execution(self, websocket, approach):
-        self.__detector_processor = RunDetection('./inputData/new_dataset_with_labels.csv', './inputData/labels/anomaly_labels.csv',
+        self.__detector_processor = RunDetection('./inputData/new_dataset_with_labels_old.csv', './inputData/labels/anomaly_labels_old.csv',
                                                  approach=approach, websocket=websocket)
         self.__detector_processor.run()
 

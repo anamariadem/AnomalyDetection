@@ -25,7 +25,6 @@ def plot_detection_results(processed_tuples):
         glucose_scores.append(processing_tuple.anomaly_scores['glucose'])
         oxygen_saturation_scores.append(processing_tuple.anomaly_scores['oxygen_saturation'])
 
-    print(heart_rate_scores)
 
     plot_anomaly_scores(heart_rate_scores, label='heart_rate')
     plot_anomaly_scores(systolic_blood_pressure_scores, label='systolic_blood_pressure')

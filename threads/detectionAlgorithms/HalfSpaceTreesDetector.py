@@ -18,6 +18,7 @@ class HalfSpaceTreesDetector(DetectionThread):
             'oxygen_saturation': (70, 100)
         }
 
+        self._approach = 'half_space_trees'
         self._detector = anomaly.HalfSpaceTrees(window_size=WARMUP_PERIOD, limits=limits)
         self._detectors = {
             'heart_rate': anomaly.HalfSpaceTrees(window_size=WARMUP_PERIOD, limits=limits),

@@ -7,6 +7,7 @@ class GaussianScorerDetector(DetectionThread):
     def __init__(self, queue, websocket=None):
         super().__init__(queue, websocket=websocket)
 
+        self._approach = 'gaussian_scorer'
         self.__detectors = {
             'heart_rate': anomaly.GaussianScorer(grace_period=WARMUP_PERIOD),
             'systolic_blood_pressure': anomaly.GaussianScorer(grace_period=WARMUP_PERIOD),
