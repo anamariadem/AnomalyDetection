@@ -2,13 +2,15 @@ import csv
 import time
 
 from models.PatientVitalsTuple import PatientVitalsTuple
+from config.config import SLEEP_TIME
 
 
 class FileReader:
-    def __init__(self, file_name, labels_file_name, queue):
+    def __init__(self, file_name, labels_file_name, queue, sleep_time=SLEEP_TIME):
         self.__file_name = file_name
         print('file name:', file_name)
         self.__queue = queue
+        self.__sleep_time = sleep_time
         self.__labels_file_name = labels_file_name
         print('labels file name:', labels_file_name)
 
@@ -53,4 +55,7 @@ class FileReader:
                 self.__queue.push(vitals_tuple)
 
                 line += 1
-                time.sleep(1)
+                time.sleep(self.__sleep_time)
+
+        while not stopped():
+            time.sleep(self.__sleep_time)

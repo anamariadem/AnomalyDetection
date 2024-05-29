@@ -16,6 +16,7 @@ class DetectionThread(Thread):
         self.__queue = queue
         self.__websocket = websocket
         self._threshold = THRESHOLD
+        self._window_size = WARMUP_PERIOD
         self._approach = None
 
         self.__processed_tuples = []
@@ -89,7 +90,7 @@ class DetectionThread(Thread):
         processing_tuple_dict = processing_tuple.to_dict()
         print('Processing tuple:', processing_tuple.id)
 
-        if int(processing_tuple.id) > WARMUP_PERIOD:
+        if int(processing_tuple.id) > self._window_size:
             results = self.score_one(processing_tuple_dict)
             processing_tuple.set_anomaly_score_dict(results)
             set_metrics(processing_tuple)
@@ -105,7 +106,7 @@ class DetectionThread(Thread):
         else:
             if self.__websocket is not None:
                 data_to_send = json.dumps(
-                    dict(type='warmup_update', data={'warmup': int(processing_tuple.id) / WARMUP_PERIOD}))
+                    dict(type='warmup_update', data={'warmup': int(processing_tuple.id) / self._window_size}))
                 await self.__websocket.send(data_to_send)
 
         self.learn_one(processing_tuple_dict)
@@ -122,7 +123,7 @@ class DetectionThread(Thread):
 
         print('Plotting results and saving data...')
         plot_detection_results(self.__processed_tuples)
-        save_metrics_to_csv(self.__processed_tuples, self._approach, WARMUP_PERIOD, self._threshold)
+        save_metrics_to_csv(self.__processed_tuples, self._approach, self._window_size, self._threshold)
 
     def stopped(self):
         return self._stop_event.is_set()

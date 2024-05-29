@@ -1,22 +1,24 @@
 from threads.DetectionThread import DetectionThread
 from river import anomaly
-from config.config import WARMUP_PERIOD
+from config.config import WARMUP_PERIOD, THRESHOLD
 
 
 class LocalOutlierFactorDetector(DetectionThread):
-    def __init__(self, queue, websocket=None):
+    def __init__(self, queue, websocket=None, threshold=THRESHOLD, window_size=WARMUP_PERIOD):
         super().__init__(queue, websocket=websocket)
 
-        self._threshold = 1.2
+        self._threshold = threshold
         self._approach = 'local_outlier_factor'
+        self._window_size = window_size
+
         self.__detectors = {
-            'heart_rate': anomaly.LocalOutlierFactor(n_neighbors=WARMUP_PERIOD),
-            'systolic_blood_pressure': anomaly.LocalOutlierFactor(n_neighbors=WARMUP_PERIOD),
-            'diastolic_blood_pressure': anomaly.LocalOutlierFactor(n_neighbors=WARMUP_PERIOD),
-            'temperature': anomaly.LocalOutlierFactor(n_neighbors=WARMUP_PERIOD),
-            'respiratory_rate': anomaly.LocalOutlierFactor(n_neighbors=WARMUP_PERIOD),
-            'glucose': anomaly.LocalOutlierFactor(n_neighbors=WARMUP_PERIOD),
-            'oxygen_saturation': anomaly.LocalOutlierFactor(n_neighbors=WARMUP_PERIOD)
+            'heart_rate': anomaly.LocalOutlierFactor(n_neighbors=self._window_size),
+            'systolic_blood_pressure': anomaly.LocalOutlierFactor(n_neighbors=self._window_size),
+            'diastolic_blood_pressure': anomaly.LocalOutlierFactor(n_neighbors=self._window_size),
+            'temperature': anomaly.LocalOutlierFactor(n_neighbors=self._window_size),
+            'respiratory_rate': anomaly.LocalOutlierFactor(n_neighbors=self._window_size),
+            'glucose': anomaly.LocalOutlierFactor(n_neighbors=self._window_size),
+            'oxygen_saturation': anomaly.LocalOutlierFactor(n_neighbors=self._window_size)
         }
 
     def learn_one(self, processing_tuple_dict):

@@ -1,11 +1,11 @@
 from river import anomaly
 
 from threads.DetectionThread import DetectionThread
-from config.config import WARMUP_PERIOD
+from config.config import WARMUP_PERIOD, THRESHOLD
 
 
 class HalfSpaceTreesDetector(DetectionThread):
-    def __init__(self, queue, websocket=None):
+    def __init__(self, queue, websocket=None, threshold=THRESHOLD, window_size=WARMUP_PERIOD):
         super().__init__(queue, websocket=websocket)
 
         limits = {
@@ -18,16 +18,18 @@ class HalfSpaceTreesDetector(DetectionThread):
             'oxygen_saturation': (70, 100)
         }
 
+        self._threshold = threshold
+        self._window_size = window_size
         self._approach = 'half_space_trees'
-        self._detector = anomaly.HalfSpaceTrees(window_size=WARMUP_PERIOD, limits=limits)
+        self._detector = anomaly.HalfSpaceTrees(window_size=self._window_size, limits=limits)
         self._detectors = {
-            'heart_rate': anomaly.HalfSpaceTrees(window_size=WARMUP_PERIOD, limits=limits),
-            'systolic_blood_pressure': anomaly.HalfSpaceTrees(window_size=WARMUP_PERIOD, limits=limits),
-            'diastolic_blood_pressure': anomaly.HalfSpaceTrees(window_size=WARMUP_PERIOD, limits=limits),
-            'temperature': anomaly.HalfSpaceTrees(window_size=WARMUP_PERIOD, limits=limits),
-            'respiratory_rate': anomaly.HalfSpaceTrees(window_size=WARMUP_PERIOD, limits=limits),
-            'glucose': anomaly.HalfSpaceTrees(window_size=WARMUP_PERIOD, limits=limits),
-            'oxygen_saturation': anomaly.HalfSpaceTrees(window_size=WARMUP_PERIOD, limits=limits)
+            'heart_rate': anomaly.HalfSpaceTrees(window_size=self._window_size, limits=limits),
+            'systolic_blood_pressure': anomaly.HalfSpaceTrees(window_size=self._window_size, limits=limits),
+            'diastolic_blood_pressure': anomaly.HalfSpaceTrees(window_size=self._window_size, limits=limits),
+            'temperature': anomaly.HalfSpaceTrees(window_size=self._window_size, limits=limits),
+            'respiratory_rate': anomaly.HalfSpaceTrees(window_size=self._window_size, limits=limits),
+            'glucose': anomaly.HalfSpaceTrees(window_size=self._window_size, limits=limits),
+            'oxygen_saturation': anomaly.HalfSpaceTrees(window_size=self._window_size, limits=limits)
         }
 
     def learn_one(self, processing_tuple_dict):

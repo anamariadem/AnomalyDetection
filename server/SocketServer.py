@@ -17,9 +17,13 @@ class SocketServer:
             print(f"Websocket server started at localhost 8001")
             await asyncio.Future()  # Run forever
 
-    def handle_start_execution(self, websocket, approach):
-        self.__detector_processor = RunDetection('./inputData/new_dataset_with_labels_old.csv', './inputData/labels/anomaly_labels_old.csv',
-                                                 approach=approach, websocket=websocket)
+    def handle_start_execution(self, websocket, approach, window_size,
+                               threshold, sleep_time):
+        self.__detector_processor = RunDetection(
+            '/Users/ana-mariademian/Documents/Dissertation/AnomalyDetection/inputData/new_dataset_with_labels.csv',
+            '/Users/ana-mariademian/Documents/Dissertation/AnomalyDetection/inputData/labels/anomaly_labels.csv',
+            approach=approach, websocket=websocket, window_size=window_size,
+            threshold=threshold, sleep_time=sleep_time)
         self.__detector_processor.run()
 
     def handle_stop_execution(self):
@@ -37,10 +41,15 @@ class SocketServer:
                     continue
 
                 event_object = json.loads(message)
+                print('event_object', event_object)
                 event = event_object["event"]
 
                 if event == 'start':
-                    self.__thread = threading.Thread(target=self.handle_start_execution, args=(websocket, event_object['approach']))
+                    self.__thread = threading.Thread(target=self.handle_start_execution,
+                                                     args=(
+                                                         websocket, event_object['approach'],
+                                                         event_object['window_size'],
+                                                         event_object['threshold'], event_object['sleep_time']))
                     self.__thread.start()
                 elif event == 'stop':
                     self.handle_stop_execution()

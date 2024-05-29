@@ -1,21 +1,24 @@
 from threads.DetectionThread import DetectionThread
 from river import anomaly
-from config.config import WARMUP_PERIOD
+from config.config import WARMUP_PERIOD, THRESHOLD
 
 
 class GaussianScorerDetector(DetectionThread):
-    def __init__(self, queue, websocket=None):
+    def __init__(self, queue, websocket=None, threshold=THRESHOLD, window_size=WARMUP_PERIOD):
         super().__init__(queue, websocket=websocket)
+
+        self._threshold = threshold
+        self._window_size = window_size
 
         self._approach = 'gaussian_scorer'
         self.__detectors = {
-            'heart_rate': anomaly.GaussianScorer(grace_period=WARMUP_PERIOD),
-            'systolic_blood_pressure': anomaly.GaussianScorer(grace_period=WARMUP_PERIOD),
-            'diastolic_blood_pressure': anomaly.GaussianScorer(grace_period=WARMUP_PERIOD),
-            'temperature': anomaly.GaussianScorer(grace_period=WARMUP_PERIOD),
-            'respiratory_rate': anomaly.GaussianScorer(grace_period=WARMUP_PERIOD),
-            'glucose': anomaly.GaussianScorer(grace_period=WARMUP_PERIOD),
-            'oxygen_saturation': anomaly.GaussianScorer(grace_period=WARMUP_PERIOD)
+            'heart_rate': anomaly.GaussianScorer(grace_period=self._window_size),
+            'systolic_blood_pressure': anomaly.GaussianScorer(grace_period=self._window_size),
+            'diastolic_blood_pressure': anomaly.GaussianScorer(grace_period=self._window_size),
+            'temperature': anomaly.GaussianScorer(grace_period=self._window_size),
+            'respiratory_rate': anomaly.GaussianScorer(grace_period=self._window_size),
+            'glucose': anomaly.GaussianScorer(grace_period=self._window_size),
+            'oxygen_saturation': anomaly.GaussianScorer(grace_period=self._window_size)
         }
 
     def learn_one(self, processing_tuple_dict):
